@@ -11,18 +11,9 @@ const TodaysDealScreen = () => {
             <ScrollView style={styles.scrollContainer}>
                 <View style={styles.container}>
                     <ArrowTitle
-                        title="আজকের মেমোর বিবরণ"
+                        title="আজকের বিক্রি"
                     />
 
-                    <DealsCard />
-                    <DealsCard />
-                    <DealsCard />
-                    <DealsCard />
-                    <DealsCard />
-                    <DealsCard />
-                    <DealsCard />
-                    <DealsCard />
-                    <DealsCard />
                     <DealsCard />
 
 

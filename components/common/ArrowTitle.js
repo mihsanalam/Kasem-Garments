@@ -6,9 +6,9 @@ import { mS, rS, vS } from "@/style/responsive";
 const ArrowTitle = ({ title }) => {
     return (
         <View style={styles.container}>
-            <View style={styles.iconContainer}>
+            {/* <View style={styles.iconContainer}>
                 <IconSymbol name="arrow.left" style={styles.icon} />
-            </View>
+            </View> */}
             <Text style={styles.screenTitle}>{title}</Text>
         </View>
     );

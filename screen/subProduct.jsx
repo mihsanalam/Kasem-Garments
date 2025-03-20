@@ -38,7 +38,7 @@ const productNames = [
 ];
 
 // SecureStore key constant
-const PRODUCTS_STORAGE_KEY = 'product_data';
+const PRODUCTS_STORAGE_KEY = 'sub_product_data';
 
 // Product Name Picker Component
 const ProductNamePicker = ({ visible, onSelect, onClose }) => {
@@ -345,7 +345,6 @@ const AddProductScreen = () => {
     name: '',
     price: '',
     quantity: '',
-    image: 'https://cdn-icons-png.flaticon.com/512/9486/9486994.png', // Default image
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -480,7 +479,7 @@ const AddProductScreen = () => {
         <View style={styles.container}>
           <View style={styles.topContainer}>
             <ArrowTitle
-              title="পণ্য যুক্ত করুন"
+              title="পণ্য বিয়োগ করুন"
             />
           </View>
 
@@ -550,7 +549,7 @@ const AddProductScreen = () => {
           </View>
 
           <IconButton
-            title="যুক্ত করুন"
+            title="বিয়োগ করুন"
             iconName="file-o"
             style={styles.checkButton}
             onPress={handleSubmit}

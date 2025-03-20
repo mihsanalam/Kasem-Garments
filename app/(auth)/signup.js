@@ -50,7 +50,7 @@ const handleLogin = () => {
 }
 
 const goToDashboard = () => {
-  router.replace("/(tabs)/Dashboard");
+  router.replace("/(tabs)/Home");
 }
 
   const handleImagePicker = async () => {

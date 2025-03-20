@@ -22,7 +22,7 @@ const SignIn = () => {
       const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
       const user = userCredential.user;
       console.log('Logged in with :' + user.email);
-      router.replace("(tabs)/Dashboard");  // Redirect to Dashboard after login
+      router.replace("(tabs)/Home");  // Redirect to Dashboard after login
     } catch (error) {
       alert(error.message);  // Show any error if login fails
     }
