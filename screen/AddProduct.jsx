@@ -1,400 +1,74 @@
 import React, { useState, useEffect } from "react";
-import { 
-  View, 
-  StyleSheet, 
-  ScrollView, 
-  Image, 
-  TouchableOpacity, 
-  Modal,
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
   Text,
-  FlatList,
   Alert
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { rS, vS, mS } from "@/style/responsive";
+import { rS, mS } from "@/style/responsive";
 import InputField from "@/components/common/InputField";
 import IconButton from "../components/common/IconButton";
 import ArrowTitle from "../components/common/ArrowTitle";
 import { AntDesign } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { productService } from "../service/api/product";
+import { notificationService } from '../service/api/notification';
 import * as SecureStore from 'expo-secure-store';
+import { SECURE_STORE_KEYS } from '../config/auth';
 
-// Product Names List
-const productNames = [
-  'পুরুষদের কটন টি-শার্ট',
-  'মহিলাদের শাড়ি',
-  'লেডিস হ্যান্ডব্যাগ',
-  'পুরুষদের জিন্স প্যান্ট',
-  'ক্যাজুয়াল জুতা',
-  'ঘড়ি',
-  'সানগ্লাস',
-  'স্মার্ট ফোন',
-  'বাচ্চাদের খেলনা',
-  'মেকাপ সেট',
-  'কম্পিউটার ল্যাপটপ',
-  'লেডিস সুইটার',
-  'ইয়ারফোন',
-  'পাঞ্জাবি',
-  'কুশন কভার'
-];
-
-// SecureStore key constant
-const PRODUCTS_STORAGE_KEY = 'product_data';
-
-// Product Name Picker Component
-const ProductNamePicker = ({ visible, onSelect, onClose }) => {
-  return (
-    <Modal
-      transparent={true}
-      animationType="fade"
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={pickerStyles.modalOverlay}>
-        <View style={pickerStyles.pickerContainer}>
-          <Text style={pickerStyles.headerTitle}>পণ্য নির্বাচন করুন</Text>
-          
-          <FlatList
-            data={productNames}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={pickerStyles.itemContainer}
-                onPress={() => {
-                  onSelect(item);
-                  onClose();
-                }}
-              >
-                <Text style={pickerStyles.itemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-            style={pickerStyles.list}
-          />
-          
-          <TouchableOpacity 
-            style={pickerStyles.cancelButton} 
-            onPress={onClose}
-          >
-            <Text style={pickerStyles.buttonText}>বাতিল</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-// Custom Calendar component that doesn't require native modules
-const Calendar = ({ visible, onSelectDate, onClose }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  
-  // Get days in month
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-  
-  // Get day of week for first day of month (0 = Sunday, 1 = Monday, etc.)
-  const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month, 1).getDay();
-  };
-  
-  // Convert to Bengali numerals
-  const toBengaliNumeral = (num) => {
-    const bengaliNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    return num.toString().split('').map(digit => bengaliNumerals[parseInt(digit)] || digit).join('');
-  };
-  
-  // Generate calendar days
-  const generateCalendarDays = () => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const daysInMonth = getDaysInMonth(year, month);
-    const firstDayOfMonth = getFirstDayOfMonth(year, month);
-    
-    const days = [];
-    
-    // Add empty cells for days before the first day of month
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(null);
-    }
-    
-    // Add days of month
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
-    }
-    
-    return days;
-  };
-  
-  // Get month name in Bengali
-  const getBengaliMonthName = (month) => {
-    const bengaliMonths = [
-      'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
-      'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
-    ];
-    return bengaliMonths[month];
-  };
-  
-  // Handle month navigation
-  const prevMonth = () => {
-    const newMonth = new Date(currentMonth);
-    newMonth.setMonth(newMonth.getMonth() - 1);
-    setCurrentMonth(newMonth);
-  };
-  
-  const nextMonth = () => {
-    const newMonth = new Date(currentMonth);
-    newMonth.setMonth(newMonth.getMonth() + 1);
-    setCurrentMonth(newMonth);
-  };
-  
-  // Handle date selection
-  const handleDateSelect = (date) => {
-    if (date) {
-      setSelectedDate(date);
-      const formattedDate = formatDateToBengali(date);
-      onSelectDate(formattedDate);
-    }
-  };
-  
-  // Format date to Bengali format
-  const formatDateToBengali = (date) => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    
-    return `${toBengaliNumeral(day)}-${toBengaliNumeral(month)}-${toBengaliNumeral(year)}`;
-  };
-  
-  // Day name headers in Bengali
-  const dayNames = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'];
-  
-  return (
-    <Modal
-      transparent={true}
-      animationType="fade"
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={calendarStyles.modalOverlay}>
-        <View style={calendarStyles.calendarContainer}>
-          {/* Header with month and year */}
-          <View style={calendarStyles.header}>
-            <TouchableOpacity onPress={prevMonth}>
-              <Text style={calendarStyles.navButton}>←</Text>
-            </TouchableOpacity>
-            
-            <Text style={calendarStyles.headerTitle}>
-              {getBengaliMonthName(currentMonth.getMonth())} {toBengaliNumeral(currentMonth.getFullYear())}
-            </Text>
-            
-            <TouchableOpacity onPress={nextMonth}>
-              <Text style={calendarStyles.navButton}>→</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {/* Day name headers */}
-          <View style={calendarStyles.weekdayHeader}>
-            {dayNames.map((day, index) => (
-              <Text key={index} style={calendarStyles.weekdayText}>{day}</Text>
-            ))}
-          </View>
-          
-          {/* Calendar grid */}
-          <View style={calendarStyles.daysGrid}>
-            {generateCalendarDays().map((date, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  calendarStyles.dayCell,
-                  date && selectedDate && date.getDate() === selectedDate.getDate() && 
-                  date.getMonth() === selectedDate.getMonth() && 
-                  date.getFullYear() === selectedDate.getFullYear() ? 
-                  calendarStyles.selectedDay : null
-                ]}
-                onPress={() => date && handleDateSelect(date)}
-                disabled={!date}
-              >
-                <Text 
-                  style={[
-                    calendarStyles.dayText,
-                    date && selectedDate && date.getDate() === selectedDate.getDate() && 
-                    date.getMonth() === selectedDate.getMonth() && 
-                    date.getFullYear() === selectedDate.getFullYear() ? 
-                    calendarStyles.selectedDayText : null
-                  ]}
-                >
-                  {date ? toBengaliNumeral(date.getDate()) : ''}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          
-          {/* Buttons */}
-          <View style={calendarStyles.buttonContainer}>
-            <TouchableOpacity 
-              style={calendarStyles.button} 
-              onPress={() => {
-                onSelectDate(formatDateToBengali(selectedDate));
-                onClose();
-              }}
-            >
-              <Text style={calendarStyles.buttonText}>নিশ্চিত করুন</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[calendarStyles.button, calendarStyles.cancelButton]} 
-              onPress={onClose}
-            >
-              <Text style={calendarStyles.buttonText}>বাতিল</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-const calendarStyles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  calendarContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
-    width: '90%',
-    maxWidth: 350,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  navButton: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    padding: 5,
-  },
-  weekdayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 10,
-  },
-  weekdayText: {
-    width: 40,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-  },
-  dayCell: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 2,
-  },
-  dayText: {
-    textAlign: 'center',
-  },
-  selectedDay: {
-    backgroundColor: '#4a90e2',
-    borderRadius: 20,
-  },
-  selectedDayText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 15,
-  },
-  button: {
-    backgroundColor: '#4a90e2',
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#e24a4a',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});
+// Add this import at the top of your file
+const defaultProductImage = require('../assets/images/addProductIcon.png');
+import Calendar from '../components/common/Calendar';
 
 const AddProductScreen = () => {
+
   const [product, setProduct] = useState({
-    id: Date.now().toString(), // Unique ID for each product
     date: '',
     name: '',
-    price: '',
+    wholesalePrice: '',
+    retailPrice: '',
     quantity: '',
-    image: 'https://cdn-icons-png.flaticon.com/512/9486/9486994.png', // Default image
+    image: defaultProductImage
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showNamePicker, setShowNamePicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Set current date automatically
+  useEffect(() => {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    const currentDate = `${day}-${month}-${year}`;
+    
+    setProduct(prev => ({ ...prev, date: currentDate }));
+  }, []);
 
   const handleDateSelect = (formattedDate) => {
     setProduct({ ...product, date: formattedDate });
     setShowDatePicker(false);
   };
 
-  const handleNameSelect = (name) => {
-    setProduct({ ...product, name: name });
-    setShowNamePicker(false);
-  };
-
-  // Create separate handlers for each input field
   const handleNameChange = (text) => {
+    // Don't trim while typing, only store the raw input
     setProduct({ ...product, name: text });
   };
 
-  const handlePriceChange = (text) => {
-    setProduct({ ...product, price: text });
+  const handleWholesalePriceChange = (text) => {
+    setProduct({ ...product, wholesalePrice: text });
+  };
+
+  const handleRetailPriceChange = (text) => {
+    setProduct({ ...product, retailPrice: text });
   };
 
   const handleQuantityChange = (text) => {
     setProduct({ ...product, quantity: text });
-  };
-
-  // Function to get existing products from SecureStore
-  const getStoredProducts = async () => {
-    try {
-      const productsJson = await SecureStore.getItemAsync(PRODUCTS_STORAGE_KEY);
-      return productsJson ? JSON.parse(productsJson) : [];
-    } catch (error) {
-      console.error('Error fetching stored products:', error);
-      return [];
-    }
-  };
-
-  // Function to save products to SecureStore
-  const saveProducts = async (products) => {
-    try {
-      await SecureStore.setItemAsync(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
-      return true;
-    } catch (error) {
-      console.error('Error saving products:', error);
-      return false;
-    }
   };
 
   // Validate product data
@@ -403,12 +77,20 @@ const AddProductScreen = () => {
       Alert.alert('ত্রুটি', 'অনুগ্রহ করে একটি তারিখ নির্বাচন করুন');
       return false;
     }
-    if (!product.name) {
+
+    // Validate name is not empty after trimming
+    const trimmedName = product.name.trim();
+    if (!trimmedName) {
       Alert.alert('ত্রুটি', 'অনুগ্রহ করে পণ্যের নাম লিখুন');
       return false;
     }
-    if (!product.price) {
-      Alert.alert('ত্রুটি', 'অনুগ্রহ করে পণ্যের মূল্য লিখুন');
+
+    if (!product.wholesalePrice) {
+      Alert.alert('ত্রুটি', 'অনুগ্রহ করে পাইকারি মূল্য লিখুন');
+      return false;
+    }
+    if (!product.retailPrice) {
+      Alert.alert('ত্রুটি', 'অনুগ্রহ করে খুচরা মূল্য লিখুন');
       return false;
     }
     if (!product.quantity) {
@@ -418,56 +100,72 @@ const AddProductScreen = () => {
     return true;
   };
 
-  // Function to clear all product data from SecureStore
-  const clearAllProducts = async () => {
-    try {
-      await SecureStore.deleteItemAsync(PRODUCTS_STORAGE_KEY);
-      Alert.alert('সফল', 'সকল পণ্যের তথ্য মুছে ফেলা হয়েছে');
-      return true;
-    } catch (error) {
-      console.error('Error clearing products:', error);
-      Alert.alert('ত্রুটি', 'পণ্যের তথ্য মুছতে সমস্যা হয়েছে');
-      return false;
-    }
-  };
-
-  // Handle form submission
   const handleSubmit = async () => {
-    if (!validateProduct()) {
-      return;
-    }
+    if (!validateProduct()) return;
 
     setIsLoading(true);
     try {
-      // Get existing products
-      const existingProducts = await getStoredProducts();
-      
-      // Add new product to the array
-      const updatedProducts = [...existingProducts, {
+      // Get current user data
+      const userDataStr = await SecureStore.getItemAsync(SECURE_STORE_KEYS.USER_DATA);
+      const userData = JSON.parse(userDataStr);
+
+      // Add product
+      const result = await productService.addProduct({
         ...product,
-        id: Date.now().toString(), // Ensure unique ID
-      }];
-      
-      // Save updated products array
-      const success = await saveProducts(updatedProducts);
-      
-      if (success) {
-        Alert.alert('সফল', 'পণ্য সফলভাবে যুক্ত করা হয়েছে');
-        
-        // Reset form after successful submission
-        setProduct({
-          id: Date.now().toString(),
-          date: '',
-          name: '',
-          price: '',
-          quantity: '',
-          image: 'https://cdn-icons-png.flaticon.com/512/9486/9486994.png',
-        });
+        name: product.name.trim(),
+        wholesalePrice: parseInt(product.wholesalePrice.replace(/[^\d০-৯]/g, '')),
+        retailPrice: parseInt(product.retailPrice.replace(/[^\d০-৯]/g, '')),
+        quantity: parseInt(product.quantity.replace(/[^\d০-৯]/g, '')),
+        image: product.image.uri || product.image
+      });
+
+      if (result.success) {
+        const notificationData = {
+          action: 'add_product',
+          by: userData.email,
+          productName: product.name.trim(),
+          quantity: parseInt(product.quantity.replace(/[^\d০-৯]/g, '')),
+          productId: result.id,
+          timestamp: new Date().toISOString()
+        };
+
+        // await notificationService.createLog(notificationData);
+
+        const resetProductForm = () => {
+          const today = new Date();
+          const day = String(today.getDate()).padStart(2, '0');
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const year = today.getFullYear();
+          const currentDate = `${day}-${month}-${year}`;
+          
+          setProduct({
+            date: currentDate,
+            name: '',
+            wholesalePrice: '',
+            retailPrice: '',
+            quantity: '',
+            image: defaultProductImage,
+          });
+        };
+
+        const handleRedirect = () => {
+          resetProductForm();
+        };
+
+        Alert.alert(
+          'সফল',
+          'পণ্য সফলভাবে যুক্ত করা হয়েছে',
+          [
+            {
+              text: 'ঠিক আছে',
+              onPress: handleRedirect
+            }
+          ]
+        );
       } else {
-        Alert.alert('ত্রুটি', 'পণ্য সংরক্ষণ করতে সমস্যা হয়েছে');
+        Alert.alert('ত্রুটি', result.error || 'পণ্য সংরক্ষণ করতে সমস্যা হয়েছে');
       }
     } catch (error) {
-      console.error('Error in submit handler:', error);
       Alert.alert('ত্রুটি', 'একটি অপ্রত্যাশিত ত্রুটি ঘটেছে');
     } finally {
       setIsLoading(false);
@@ -479,14 +177,17 @@ const AddProductScreen = () => {
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.container}>
           <View style={styles.topContainer}>
-            <ArrowTitle
-              title="পণ্য যুক্ত করুন"
-            />
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.push("/(tabs)/Home")}>
+              <ArrowTitle />
+            </TouchableOpacity>
+            <Text style={styles.headerText}> পণ্য যুক্ত করুন </Text>
           </View>
 
           <View style={styles.imageContainer}>
             <Image
-              source={{ uri: product.image }}
+              source={typeof product.image === 'string' ? { uri: product.image } : product.image}
               style={styles.image}
             />
           </View>
@@ -497,7 +198,7 @@ const AddProductScreen = () => {
               <View>
                 <Text style={styles.dateTitle}>তারিখ</Text>
                 <View style={styles.dateContainer}>
-                  <AntDesign name="calendar" size={24} color="black" style={styles.dateIcon} />
+                  <AntDesign name="calendar" style={styles.dateIcon} />
                   <Text style={styles.dateInput}>{product.date || `যেমন, ০১-০১-২০০০`}</Text>
                 </View>
               </View>
@@ -510,32 +211,30 @@ const AddProductScreen = () => {
               onClose={() => setShowDatePicker(false)}
             />
 
-            {/* Product Name Input with Picker */}
-            <TouchableOpacity onPress={() => setShowNamePicker(true)}>
-              <View>
-                <Text style={styles.inputTitle}>পণ্যের নাম</Text>
-                <View style={styles.inputFieldContainer}>
-                  <AntDesign name="cubes" size={24} color="#757575" style={styles.fieldIcon} />
-                  <Text style={styles.fieldInput}>
-                    {product.name || "যেমন, পুরুষদের জন্য ফ্যাশনেবল টি শার্ট"}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            {/* Product Name Picker */}
-            <ProductNamePicker
-              visible={showNamePicker}
-              onSelect={handleNameSelect}
-              onClose={() => setShowNamePicker(false)}
+            <InputField
+              title="পণ্যের নাম"
+              placeholder="যেমন, পুরুষদের জন্য ফ্যাশনেবল টি শার্ট"
+              iconName="edit"
+              value={product.name}
+              handleChangeText={handleNameChange}
+              otherStyles={styles.inputFieldStyle}
             />
 
             <InputField
-              title="মূল্য"
+              title="পাইকারি মূল্য"
+              placeholder="যেমন, ২০০০ টাকা"
+              iconName="tag"
+              value={product.wholesalePrice}
+              onChangeText={handleWholesalePriceChange}
+              keyboardType="numeric"
+            />
+
+            <InputField
+              title="খুচরা মূল্য"
               placeholder="যেমন, ২২০০ টাকা"
               iconName="tag"
-              value={product.price}
-              onChangeText={handlePriceChange}
+              value={product.retailPrice}
+              onChangeText={handleRetailPriceChange}
               keyboardType="numeric"
             />
 
@@ -556,29 +255,7 @@ const AddProductScreen = () => {
             onPress={handleSubmit}
             disabled={isLoading}
           />
-          
-          <IconButton
-            title="সব ডাটা মুছুন"
-            iconName="trash-o"
-            style={styles.clearButton}
-            onPress={() => {
-              Alert.alert(
-                'নিশ্চিতকরণ',
-                'আপনি কি সত্যিই সকল পণ্যের ডাটা মুছে ফেলতে চান?',
-                [
-                  {
-                    text: 'না',
-                    style: 'cancel',
-                  },
-                  {
-                    text: 'হ্যাঁ',
-                    onPress: clearAllProducts,
-                  },
-                ],
-                { cancelable: true }
-              );
-            }}
-          />
+
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -586,54 +263,6 @@ const AddProductScreen = () => {
 };
 
 export default AddProductScreen;
-
-// Picker Styles
-const pickerStyles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pickerContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
-    width: '90%',
-    maxWidth: 350,
-    maxHeight: '80%',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 15,
-    color: '#202634',
-  },
-  list: {
-    maxHeight: 400,
-  },
-  itemContainer: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  itemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  cancelButton: {
-    backgroundColor: '#e24a4a',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 15,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});
 
 // Main Styles
 const styles = StyleSheet.create({
@@ -654,12 +283,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  headerText: {
+    color: 'black',
+    fontSize: mS(25),
+    fontWeight: '600',
+    marginTop: mS(-20),
+  },
   icon: {
     fontSize: mS(30),
   },
   imageContainer: {
     alignItems: "center",
-    marginTop: mS(30),
+    marginTop: mS(-15),
   },
   image: {
     width: rS(130),
@@ -671,11 +306,6 @@ const styles = StyleSheet.create({
   },
   checkButton: {
     marginLeft: mS(10),
-    marginBottom: mS(10),
-  },
-  clearButton: {
-    marginLeft: mS(10),
-    backgroundColor: '#e74c3c',
   },
   dateContainer: {
     flexDirection: 'row',
@@ -685,20 +315,20 @@ const styles = StyleSheet.create({
     borderColor: '#D3D3D3',
     borderWidth: 1,
     borderRadius: 6,
-    paddingHorizontal: mS(12),
-    paddingVertical: mS(10),
+    paddingHorizontal: mS(10),
+    paddingVertical: mS(12),
   },
   dateTitle: {
     marginTop: mS(10),
     fontSize: mS(15),
     marginBottom: mS(5),
-    color: '#202634',
+    color: 'black',
     marginLeft: mS(5),
   },
   dateInput: {
     width: rS(220),
     fontSize: mS(14),
-    color: 'black',
+    color: '#757575',
     flex: 1,
   },
   dateIcon: {
@@ -712,7 +342,7 @@ const styles = StyleSheet.create({
     marginTop: mS(10),
     fontSize: mS(15),
     marginBottom: mS(5),
-    color: '#202634',
+    color: 'black',
     marginLeft: mS(5),
   },
   inputFieldContainer: {
@@ -730,11 +360,12 @@ const styles = StyleSheet.create({
     fontSize: mS(20),
     marginRight: mS(8),
     marginLeft: mS(5),
+    color: "#757575"
   },
   fieldInput: {
     width: rS(220),
     fontSize: mS(14),
-    color: 'black',
+    color: '#757575',
     flex: 1,
   },
 });

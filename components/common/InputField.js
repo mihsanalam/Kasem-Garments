@@ -8,7 +8,7 @@ const InputField = ({
   placeholder,
   iconName,
   value,
-  onChangeText,
+  handleChangeText,
   editable = true,
   ...props
 }) => {
@@ -22,7 +22,7 @@ const InputField = ({
           placeholder={placeholder}
           placeholderTextColor="#999"
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={handleChangeText}
           editable={editable}
           {...props}
         />
@@ -34,25 +34,27 @@ const InputField = ({
 const styles = StyleSheet.create({
   container: {
     marginTop: mS(10),
-    marginBottom: mS(10),
+    // marginLeft: mS(5),
   },
   title: {
     fontSize: mS(15),
     marginBottom: mS(5),
-    color: '#202634',
+    color: 'black',
     marginLeft: mS(5),
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    // justifyContent: 'center',
     justifyContent: 'center',
+    // height: mS(50),
     width: rS(300),
     backgroundColor: '#FFFFFF',
     borderColor: '#D3D3D3',
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: mS(12),
-    paddingVertical: mS(2),
+    paddingVertical: mS(4),
   },
   icon: {
     fontSize: mS(20),
@@ -61,9 +63,10 @@ const styles = StyleSheet.create({
     marginLeft: mS(5),
   },
   input: {
-    width: rS(220),
+    // height: mS(40),
+    width: mS(220),
     fontSize: mS(14),
-    color: 'black',
+    color: '#333',
     flex: 1,
   },
 });

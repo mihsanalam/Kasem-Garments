@@ -2,51 +2,51 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { rS, vS, mS } from "@/style/responsive";
 
-    const SaleTable = () => {
-        
-        const data = [
-            { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
-            { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
-            { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
-            { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
-            { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
-            { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
-        ];
+const SaleTable = () => {
 
-        const convertDigits = (num, fromDigits, toDigits) => {
-            return num
-                .toString()
-                .split('')
-                .map((digit) => {
-                    const index = fromDigits.indexOf(digit);
-                    return index !== -1 ? toDigits[index] : digit;
-                })
-                .join('');
-        };
-    
-        const bengaliToArabic = (num) => {
-            const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const arabicDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-            return convertDigits(num, bengaliDigits, arabicDigits);
-        };
-    
-        const totalSale = data.reduce((acc, item) => {
-            const arabicPriceString = bengaliToArabic(item.price.replace(/,/g, ''));
-            const price = parseFloat(arabicPriceString);
-    
-            if (!isNaN(price)) {
-                return acc + price;
-            } else {
-                console.warn(`Invalid price: ${item.price}`);
-                return acc;
-            }
-        }, 0);
-    
-        const arabicToBengali = (num) => {
-            const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const arabicDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-            return convertDigits(num, arabicDigits, bengaliDigits);
-        };
+    // const data = [
+    //     { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
+    //     { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
+    //     { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
+    //     { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
+    //     { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
+    //     { sl: '৫০২', productName: 'পুরুষদের জন্য ফ্যাশনেবল টি-শার্ট', quantity: '১০০', price: '৮৮০০' },
+    // ];
+
+    const convertDigits = (num, fromDigits, toDigits) => {
+        return num
+            .toString()
+            .split('')
+            .map((digit) => {
+                const index = fromDigits.indexOf(digit);
+                return index !== -1 ? toDigits[index] : digit;
+            })
+            .join('');
+    };
+
+    const bengaliToArabic = (num) => {
+        const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        const arabicDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        return convertDigits(num, bengaliDigits, arabicDigits);
+    };
+
+    const totalSale = data.reduce((acc, item) => {
+        const arabicPriceString = bengaliToArabic(item.price.replace(/,/g, ''));
+        const price = parseFloat(arabicPriceString);
+
+        if (!isNaN(price)) {
+            return acc + price;
+        } else {
+            console.warn(`Invalid price: ${item.price}`);
+            return acc;
+        }
+    }, 0);
+
+    const arabicToBengali = (num) => {
+        const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        const arabicDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        return convertDigits(num, arabicDigits, bengaliDigits);
+    };
 
     return (
         <ScrollView horizontal={true}>
@@ -67,7 +67,7 @@ import { rS, vS, mS } from "@/style/responsive";
                 ))}
                 <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>মোট বিক্রি</Text>
-                    <Text style={styles.totalValue}>{arabicToBengali(totalSale)}</Text> 
+                    <Text style={styles.totalValue}>{arabicToBengali(totalSale)}</Text>
                 </View>
                 <View style={styles.bottomBorder} />
             </View>

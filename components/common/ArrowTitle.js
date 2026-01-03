@@ -3,13 +3,13 @@ import { View, Text, StyleSheet } from "react-native";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { mS, rS, vS } from "@/style/responsive";
 
-const ArrowTitle = ({ title }) => {
+const ArrowTitle = () => {
     return (
         <View style={styles.container}>
-            {/* <View style={styles.iconContainer}>
+            <View style={styles.iconContainer}>
                 <IconSymbol name="arrow.left" style={styles.icon} />
-            </View> */}
-            <Text style={styles.screenTitle}>{title}</Text>
+            </View>
+            {/* <Text style={styles.screenTitle}>{title}</Text> */}
         </View>
     );
 };

@@ -9,13 +9,24 @@ dist/
 web-build/
 expo-env.d.ts
 
+#project
+android
+
 # Native
 *.orig.*
 *.jks
 *.p8
 *.p12
 *.key
+*.keystore
 *.mobileprovision
+
+# Firebase
+google-services.json
+
+# Build artifacts
+android/
+ios/
 
 # Metro
 .metro-health-check*

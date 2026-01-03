@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { 
-  View, 
-  StyleSheet, 
-  ScrollView, 
-  Image, 
-  TouchableOpacity, 
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
   Modal,
   Text,
   FlatList,
@@ -17,6 +17,7 @@ import IconButton from "../components/common/IconButton";
 import ArrowTitle from "../components/common/ArrowTitle";
 import { AntDesign } from "@expo/vector-icons";
 import * as SecureStore from 'expo-secure-store';
+import Calendar from '../components/common/Calendar';
 
 // Product Names List
 const productNames = [
@@ -52,7 +53,7 @@ const ProductNamePicker = ({ visible, onSelect, onClose }) => {
       <View style={pickerStyles.modalOverlay}>
         <View style={pickerStyles.pickerContainer}>
           <Text style={pickerStyles.headerTitle}>পণ্য নির্বাচন করুন</Text>
-          
+
           <FlatList
             data={productNames}
             keyExtractor={(item, index) => index.toString()}
@@ -69,9 +70,9 @@ const ProductNamePicker = ({ visible, onSelect, onClose }) => {
             )}
             style={pickerStyles.list}
           />
-          
-          <TouchableOpacity 
-            style={pickerStyles.cancelButton} 
+
+          <TouchableOpacity
+            style={pickerStyles.cancelButton}
             onPress={onClose}
           >
             <Text style={pickerStyles.buttonText}>বাতিল</Text>
@@ -82,261 +83,7 @@ const ProductNamePicker = ({ visible, onSelect, onClose }) => {
   );
 };
 
-// Custom Calendar component that doesn't require native modules
-const Calendar = ({ visible, onSelectDate, onClose }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  
-  // Get days in month
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-  
-  // Get day of week for first day of month (0 = Sunday, 1 = Monday, etc.)
-  const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month, 1).getDay();
-  };
-  
-  // Convert to Bengali numerals
-  const toBengaliNumeral = (num) => {
-    const bengaliNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    return num.toString().split('').map(digit => bengaliNumerals[parseInt(digit)] || digit).join('');
-  };
-  
-  // Generate calendar days
-  const generateCalendarDays = () => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const daysInMonth = getDaysInMonth(year, month);
-    const firstDayOfMonth = getFirstDayOfMonth(year, month);
-    
-    const days = [];
-    
-    // Add empty cells for days before the first day of month
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(null);
-    }
-    
-    // Add days of month
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
-    }
-    
-    return days;
-  };
-  
-  // Get month name in Bengali
-  const getBengaliMonthName = (month) => {
-    const bengaliMonths = [
-      'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
-      'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
-    ];
-    return bengaliMonths[month];
-  };
-  
-  // Handle month navigation
-  const prevMonth = () => {
-    const newMonth = new Date(currentMonth);
-    newMonth.setMonth(newMonth.getMonth() - 1);
-    setCurrentMonth(newMonth);
-  };
-  
-  const nextMonth = () => {
-    const newMonth = new Date(currentMonth);
-    newMonth.setMonth(newMonth.getMonth() + 1);
-    setCurrentMonth(newMonth);
-  };
-  
-  // Handle date selection
-  const handleDateSelect = (date) => {
-    if (date) {
-      setSelectedDate(date);
-      const formattedDate = formatDateToBengali(date);
-      onSelectDate(formattedDate);
-    }
-  };
-  
-  // Format date to Bengali format
-  const formatDateToBengali = (date) => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    
-    return `${toBengaliNumeral(day)}-${toBengaliNumeral(month)}-${toBengaliNumeral(year)}`;
-  };
-  
-  // Day name headers in Bengali
-  const dayNames = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'];
-  
-  return (
-    <Modal
-      transparent={true}
-      animationType="fade"
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={calendarStyles.modalOverlay}>
-        <View style={calendarStyles.calendarContainer}>
-          {/* Header with month and year */}
-          <View style={calendarStyles.header}>
-            <TouchableOpacity onPress={prevMonth}>
-              <Text style={calendarStyles.navButton}>←</Text>
-            </TouchableOpacity>
-            
-            <Text style={calendarStyles.headerTitle}>
-              {getBengaliMonthName(currentMonth.getMonth())} {toBengaliNumeral(currentMonth.getFullYear())}
-            </Text>
-            
-            <TouchableOpacity onPress={nextMonth}>
-              <Text style={calendarStyles.navButton}>→</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {/* Day name headers */}
-          <View style={calendarStyles.weekdayHeader}>
-            {dayNames.map((day, index) => (
-              <Text key={index} style={calendarStyles.weekdayText}>{day}</Text>
-            ))}
-          </View>
-          
-          {/* Calendar grid */}
-          <View style={calendarStyles.daysGrid}>
-            {generateCalendarDays().map((date, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  calendarStyles.dayCell,
-                  date && selectedDate && date.getDate() === selectedDate.getDate() && 
-                  date.getMonth() === selectedDate.getMonth() && 
-                  date.getFullYear() === selectedDate.getFullYear() ? 
-                  calendarStyles.selectedDay : null
-                ]}
-                onPress={() => date && handleDateSelect(date)}
-                disabled={!date}
-              >
-                <Text 
-                  style={[
-                    calendarStyles.dayText,
-                    date && selectedDate && date.getDate() === selectedDate.getDate() && 
-                    date.getMonth() === selectedDate.getMonth() && 
-                    date.getFullYear() === selectedDate.getFullYear() ? 
-                    calendarStyles.selectedDayText : null
-                  ]}
-                >
-                  {date ? toBengaliNumeral(date.getDate()) : ''}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          
-          {/* Buttons */}
-          <View style={calendarStyles.buttonContainer}>
-            <TouchableOpacity 
-              style={calendarStyles.button} 
-              onPress={() => {
-                onSelectDate(formatDateToBengali(selectedDate));
-                onClose();
-              }}
-            >
-              <Text style={calendarStyles.buttonText}>নিশ্চিত করুন</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[calendarStyles.button, calendarStyles.cancelButton]} 
-              onPress={onClose}
-            >
-              <Text style={calendarStyles.buttonText}>বাতিল</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
 
-const calendarStyles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  calendarContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
-    width: '90%',
-    maxWidth: 350,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  navButton: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    padding: 5,
-  },
-  weekdayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 10,
-  },
-  weekdayText: {
-    width: 40,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-  },
-  dayCell: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 2,
-  },
-  dayText: {
-    textAlign: 'center',
-  },
-  selectedDay: {
-    backgroundColor: '#4a90e2',
-    borderRadius: 20,
-  },
-  selectedDayText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 15,
-  },
-  button: {
-    backgroundColor: '#4a90e2',
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#e24a4a',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});
 
 const AddProductScreen = () => {
   const [product, setProduct] = useState({
@@ -440,19 +187,19 @@ const AddProductScreen = () => {
     try {
       // Get existing products
       const existingProducts = await getStoredProducts();
-      
+
       // Add new product to the array
       const updatedProducts = [...existingProducts, {
         ...product,
         id: Date.now().toString(), // Ensure unique ID
       }];
-      
+
       // Save updated products array
       const success = await saveProducts(updatedProducts);
-      
+
       if (success) {
         Alert.alert('সফল', 'পণ্য সফলভাবে যুক্ত করা হয়েছে');
-        
+
         // Reset form after successful submission
         setProduct({
           id: Date.now().toString(),
@@ -555,7 +302,7 @@ const AddProductScreen = () => {
             onPress={handleSubmit}
             disabled={isLoading}
           />
-          
+
           <IconButton
             title="সব ডাটা মুছুন"
             iconName="trash-o"

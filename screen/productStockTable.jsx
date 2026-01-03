@@ -1,251 +1,194 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Modal,
+  FlatList,
   SafeAreaView,
-  ScrollView,
+  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import LogoTitle from "@/components/inventory/LogoTitle";
-import { AntDesign } from "@expo/vector-icons";
-import * as SecureStore from "expo-secure-store";
-import { useFocusEffect } from "expo-router";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
+import ArrowTitle from "../components/common/ArrowTitle";
+import { mS } from "@/style/responsive";
+import { productService } from "../service/api/product";
 
-// Define storage keys
-const PRODUCTS_STORAGE_KEY = "product_data";
-const INVOICES_STORAGE_KEY = "invoices_data";
+// Helper function to convert numbers to Bengali
+const formatNumber = (number) => {
+  const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return number.toString().split('').map(digit => banglaDigits[parseInt(digit)] || digit).join('');
+};
 
+// Helper function to format Firestore timestamp to Bengali date
+const formatFirestoreDate = (timestamp) => {
+  if (!timestamp) return 'N/A';
+  try {
+    const date = timestamp.toDate();
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${formatNumber(day)}-${formatNumber(month)}-${formatNumber(year)}`;
+  } catch (error) {
+    return 'N/A';
+  }
+};
+
+// Table Header Component
+const TableHeader = () => {
+  return (
+    <View style={styles.tableHeader}>
+      <Text style={[styles.headerCell, { flex: 1.5 }]}>তারিখ</Text>
+      <Text style={[styles.headerCell, { flex: 2 }]}>পণ্যের নাম</Text>
+      <Text style={[styles.headerCell, { flex: 1 }]}>স্টক ইন</Text>
+      <Text style={[styles.headerCell, { flex: 1 }]}>স্টক আউট</Text>
+      <Text style={[styles.headerCell, { flex: 1 }]}>স্টক আছে</Text>
+    </View>
+  );
+};
+
+// Table Row Component
+const TableRow = ({ item }) => {
+  return (
+    <View style={styles.tableRow}>
+      <Text style={[styles.tableCell, { flex: 1.5 }]}>{formatFirestoreDate(item.dateAdded)}</Text>
+      <Text style={[styles.tableCell, { flex: 2 }]}>{item.name}</Text>
+      <Text style={[styles.tableCell, { flex: 1 }]}>{formatNumber(item.stockIn)}</Text>
+      <Text style={[styles.tableCell, { flex: 1 }]}>{formatNumber(item.stockOut)}</Text>
+      <Text style={[
+        styles.tableCell,
+        {
+          flex: 1,
+          color: item.currentStock > 0 ? '#2E7D32' : '#D32F2F'
+        }
+      ]}>{formatNumber(item.currentStock)}</Text>
+    </View>
+  );
+};
+
+// Product Stock Table Screen
 const ProductStockTable = () => {
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [tableData, setTableData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const params = useLocalSearchParams();
+  const productName = params.productName;
 
-  // Fetch data from SecureStore
+  const [loading, setLoading] = useState(true);
+  const [tableData, setTableData] = useState([]);
+  const [totals, setTotals] = useState({
+    totalStockIn: 0,
+    totalStockOut: 0,
+    totalCurrentStock: 0
+  });
+
+  // Process data and create table entries
+  const processProductData = (products) => {
+    const tableRows = products.map(product => {
+      // Skip products that don't match the filter or have no name
+      if (!product || !product.name || product.name.trim() !== productName) return null;
+
+      // Calculate stock values
+      const stockIn = parseInt(product.originalQuantity) || 0;
+      const stockOut = stockIn - (parseInt(product.currentStock) || 0);
+      const currentStock = parseInt(product.currentStock) || 0;
+
+      return {
+        id: product.id,
+        dateAdded: product.dateAdded,
+        name: product.name.trim(), // Ensure name is trimmed
+        stockIn,
+        stockOut,
+        currentStock
+      };
+    }).filter(row => row !== null);
+
+    // Calculate totals
+    const totalStockIn = tableRows.reduce((sum, row) => sum + row.stockIn, 0);
+    const totalStockOut = tableRows.reduce((sum, row) => sum + row.stockOut, 0);
+    const totalCurrentStock = totalStockIn - totalStockOut;
+
+    setTotals({
+      totalStockIn,
+      totalStockOut,
+      totalCurrentStock
+    });
+
+    return tableRows;
+  };
+
+  // Fetch products when component mounts
   useFocusEffect(
     React.useCallback(() => {
       const fetchData = async () => {
         try {
           setLoading(true);
-          
-          // Fetch products
-          const storedProductsJson = await SecureStore.getItemAsync(
-            PRODUCTS_STORAGE_KEY
-          );
-          
-          let productsData = [];
-          if (storedProductsJson) {
-            productsData = JSON.parse(storedProductsJson);
-            setProducts(productsData);
-            console.log("Products fetched from SecureStore:", productsData.length);
-          } else {
-            console.log("No products found in SecureStore");
-            setProducts([]);
-          }
-          
-          // Fetch invoices
-          const storedInvoicesJson = await SecureStore.getItemAsync(
-            INVOICES_STORAGE_KEY
-          );
-          
-          let invoicesData = [];
-          if (storedInvoicesJson) {
-            invoicesData = JSON.parse(storedInvoicesJson);
-            setInvoices(invoicesData);
-            console.log("Invoices fetched from SecureStore:", invoicesData.length);
-          } else {
-            console.log("No invoices found in SecureStore");
-            setInvoices([]);
-          }
-          
-          // Create table data
-          processTableData(productsData, invoicesData);
-          
+          const products = await productService.getAllProducts();
+          const tableRows = processProductData(products);
+          setTableData(tableRows);
         } catch (error) {
-          console.error("Error fetching data from SecureStore:", error);
+          console.error("Error fetching data:", error);
         } finally {
           setLoading(false);
         }
       };
-      
-      fetchData();
-    }, [])
-  );
-  
-  // Process and transform data for the table
-  const processTableData = (productsData, invoicesData) => {
-    // Calculate stock out quantities from invoices
-    const stockOutMap = {};
-    
-    // Process each invoice
-    invoicesData.forEach(invoice => {
-      // Check if invoice has items
-      if (invoice.items && Array.isArray(invoice.items)) {
-        // Process each item in the invoice
-        invoice.items.forEach(item => {
-          const productId = item.productId;
-          
-          // Add to existing stock out count or initialize
-          stockOutMap[productId] = (stockOutMap[productId] || 0) + item.quantity;
-        });
-      }
-    });
-    
-    // Create table rows from products data
-    const tableRows = productsData.map(product => {
-      // Get stock out quantity for this product
-      const stockOut = stockOutMap[product.id] || 0;
-      
-      // Calculate current stock
-      const stockIn = parseInt(product.originalQuantity || product.quantity) || 0;
-      const currentStock = stockIn - stockOut;
-      
-      return {
-        id: product.id,
-        date: product.date || "N/A",
-        name: product.name,
-        totalIn: stockIn.toString(),
-        totalOut: stockOut.toString(),
-        totalAdd: currentStock.toString()
-      };
-    });
-    
-    setTableData(tableRows);
-  };
 
-  // Column headers
-  const headers = [
-    { key: "date", label: "তারিখ" },
-    { key: "name", label: "পণ্যের নাম" },
-    { key: "totalIn", label: "ইন করন" },
-    { key: "totalOut", label: "ইন আউট" },
-    { key: "totalAdd", label: "স্টক আছে" },
-  ];
+      fetchData();
+    }, [productName])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View
-        style={{
-          marginBottom: 20,
-          marginTop: 20,
-          marginLeft: 10,
-          marginRight: 10,
-        }}
-      >
-        <LogoTitle title="পণ্যের স্টক" />
-      </View>
-      <View style={styles.filterContainer}>
+      <View style={styles.header}>
         <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setFilterVisible(true)}
-        >
-          <AntDesign name="filter" size={24} color="black" />
-          <Text style={styles.filterText}>ফিল্টার</Text>
+          style={styles.backButton}
+          onPress={() => router.back()}>
+          <ArrowTitle />
         </TouchableOpacity>
+        <Text style={styles.headerText}> পণ্যের স্টক </Text>
       </View>
 
+      {/* Summary Cards */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statCard}>
+          <Text style={styles.statTitle}>স্টক ইন</Text>
+          <Text style={styles.statValue}>{formatNumber(totals.totalStockIn)}</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <Text style={styles.statTitle}>স্টক আউট</Text>
+          <Text style={styles.statValue}>{formatNumber(totals.totalStockOut)}</Text>
+        </View>
+
+        <View style={[styles.statCard, {
+          borderLeftColor: totals.totalCurrentStock > 0 ? '#4CAF50' : '#F44336'
+        }]}>
+          <Text style={styles.statTitle}>স্টক আছে</Text>
+          <Text style={[styles.statValue, {
+            color: totals.totalCurrentStock > 0 ? '#1B5E20' : '#B71C1C'
+          }]}>{formatNumber(totals.totalCurrentStock)}</Text>
+        </View>
+      </View>
+
+      {/* Table */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4CAF50" />
-          <Text style={styles.loadingText}>লোড হচ্ছে...</Text>
+          <Text style={styles.loadingText}>ডাটা লোড হচ্ছে...</Text>
         </View>
-      ) : tableData.length > 0 ? (
-        <ScrollView horizontal>
-          <View>
-            {/* Table Header */}
-            <View style={styles.headerRow}>
-              {headers.map((header) => (
-                <View
-                  key={header.key}
-                  style={[
-                    styles.headerCell,
-                    header.key === "name" ? styles.nameCell : null,
-                  ]}
-                >
-                  <Text style={styles.headerText}>{header.label}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Table Data */}
-            <ScrollView>
-              {tableData.map((row, index) => (
-                <View key={row.id || index} style={styles.dataRow}>
-                  <View style={styles.dataCell}>
-                    <Text style={styles.dataText}>{row.date}</Text>
-                  </View>
-                  <View style={[styles.dataCell, styles.nameCell]}>
-                    <Text style={styles.dataText}>{row.name}</Text>
-                  </View>
-                  <View style={styles.dataCell}>
-                    <Text style={styles.dataText}>{row.totalIn}</Text>
-                  </View>
-                  <View style={styles.dataCell}>
-                    <Text style={styles.dataText}>{row.totalOut}</Text>
-                  </View>
-                  <View style={[styles.dataCell, 
-                    parseInt(row.totalAdd) <= 0 ? styles.negativeStock : null]}>
-                    <Text style={[styles.dataText, 
-                      parseInt(row.totalAdd) <= 0 ? styles.negativeStockText : null]}>
-                      {row.totalAdd}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </ScrollView>
       ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>কোন পণ্য পাওয়া যায়নি</Text>
+        <View style={styles.tableContainer}>
+          <TableHeader />
+
+          <FlatList
+            data={tableData}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <TableRow item={item} />}
+            contentContainerStyle={styles.tableListContainer}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>কোন পণ্য পাওয়া যায়নি</Text>
+              </View>
+            }
+          />
         </View>
       )}
-
-      {/* Filter Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={filterVisible}
-        onRequestClose={() => setFilterVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>ফিল্টার অপশন</Text>
-
-            <View style={styles.filterOptions}>
-              <Text style={styles.filterOptionLabel}>তারিখ অনুযায়ী</Text>
-              {/* Date filter options would go here */}
-            </View>
-
-            <View style={styles.filterOptions}>
-              <Text style={styles.filterOptionLabel}>পণ্য অনুযায়ী</Text>
-              {/* Product filter options would go here */}
-            </View>
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setFilterVisible(false)}
-              >
-                <Text style={styles.buttonText}>বাতিল</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.modalButton, styles.applyButton]}
-                onPress={() => setFilterVisible(false)}
-              >
-                <Text style={[styles.buttonText, styles.applyButtonText]}>
-                  প্রয়োগ
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -254,122 +197,90 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 50,
+    paddingTop: mS(25),
   },
-  filterContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  filterButton: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 4,
-    padding: 8,
-    alignSelf: "flex-start",
-  },
-  filterText: {
-    marginLeft: 8,
-    fontWeight: "500",
-  },
-  headerRow: {
-    flexDirection: "row",
-    backgroundColor: "#4CAF50",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  headerCell: {
-    padding: 12,
-    width: 100,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRightWidth: 1,
-    borderRightColor: "#e0e0e0",
-  },
-  nameCell: {
-    width: 200,
+    // justifyContent: "center",
+    marginBottom: mS(20),
+    paddingHorizontal: mS(16),
+    marginTop: mS(10),
   },
   headerText: {
+    fontSize: mS(22),
     fontWeight: "bold",
-    color: "white",
-    textAlign: "center",
+    color: "#333",
+    marginRight: mS(8),
+    marginLeft: mS(10),
   },
-  dataRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+  backButton: {
+    // padding: mS(10),
+    marginTop: mS(20),
   },
-  dataCell: {
-    padding: 12,
-    width: 100,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRightWidth: 1,
-    borderRightColor: "#eee",
-  },
-  dataText: {
-    textAlign: "center",
-  },
-  negativeStock: {
-    backgroundColor: "#FFEBEE",
-  },
-  negativeStockText: {
-    color: "#D32F2F",
-    fontWeight: "bold",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    width: "80%",
-    backgroundColor: "white",
-    borderRadius: 8,
-    padding: 20,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  filterOptions: {
-    marginBottom: 16,
-  },
-  filterOptionLabel: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  buttonRow: {
+  statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 16,
+    marginHorizontal: mS(12),
+    marginBottom: mS(16),
   },
-  modalButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 4,
-    width: "48%",
+  statCard: {
+    flex: 1,
+    backgroundColor: "#E8F5E9",
+    padding: mS(10),
+    borderRadius: 8,
+    marginHorizontal: mS(3),
+    borderLeftWidth: 4,
+    borderLeftColor: "#4CAF50",
     alignItems: "center",
   },
-  cancelButton: {
-    backgroundColor: "#f5f5f5",
+  statTitle: {
+    fontSize: mS(14),
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginBottom: mS(5),
+  },
+  statValue: {
+    fontSize: mS(16),
+    fontWeight: "bold",
+    color: "#1B5E20",
+  },
+  tableContainer: {
+    flex: 1,
+    marginHorizontal: mS(10),
+    marginBottom: mS(10),
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#E0E0E0",
   },
-  applyButton: {
+  tableHeader: {
+    flexDirection: "row",
     backgroundColor: "#4CAF50",
+    paddingHorizontal: mS(10),
+    paddingVertical: mS(8),
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
-  buttonText: {
-    fontWeight: "500",
+  headerCell: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: mS(14),
+    textAlign: "center",
   },
-  applyButtonText: {
-    color: "white",
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    padding: mS(10),
+  },
+  tableCell: {
+    fontSize: mS(14),
+    textAlign: "center",
+  },
+  tableListContainer: {
+    flexGrow: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -377,18 +288,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#555",
+    marginTop: mS(10),
+    fontSize: mS(16),
+    color: "#4CAF50",
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
+    padding: mS(20),
     alignItems: "center",
+    justifyContent: "center",
   },
   emptyText: {
-    fontSize: 16,
-    color: "#555",
+    fontSize: mS(16),
+    color: "#666",
   },
 });
 

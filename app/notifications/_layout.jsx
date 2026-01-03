@@ -2,7 +2,7 @@ import React from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-export default function AuthLayout() {
+export default function NotificationsLayout() {
     return (
         <>    
             <Stack
@@ -13,8 +13,7 @@ export default function AuthLayout() {
                     contentStyle: { backgroundColor: 'white' }
                 }}
             >
-                <Stack.Screen name="signin" />
-                <Stack.Screen name="signup" />
+                <Stack.Screen name="index" />
             </Stack>
             <StatusBar backgroundColor="white" style="light" />
         </>

@@ -3,28 +3,28 @@ import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { rS, vS, mS } from "@/style/responsive";
 import InvoiceHeader from "../components/inventory/InvoiceHeader";
-import InvoiceCustomerData from "../components/inventory/InvoiceCustomerData";
 import InvoiceTable from "../components/inventory/InvoiceTable";
 import InvoiceApproveSection from "../components/inventory/InvoiceApprove";
-import IconButton from "../components/common/IconButton";
 
 const InvoiceScreen = () => {
+    const [data, setData] = React.useState([]);
+    const [invoiceData, setInvoiceData] = React.useState([]);
+    console.log(11, data)
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView style={styles.scrollContainer}>
                 <View style={styles.container}>
                     <InvoiceHeader />
-                    <View style={styles.CustomerData}>
+                    {/* <View style={styles.CustomerData}>
                         <InvoiceCustomerData />
-                    </View>
+                    </View> */}
                     <View style={styles.ProductData}>
-                        <InvoiceTable />
+                        <InvoiceTable data={data} setData={setData} invoiceData={invoiceData} setInvoiceData={setInvoiceData} />
                     </View>
 
                     <View style={styles.ApproveSection}>
-                        <InvoiceApproveSection />
+                        <InvoiceApproveSection data={data} invoiceData={invoiceData}/>
                     </View>
-                    <IconButton title="প্রিন্ট করুন" iconName="print" onPress={() => { }} />
                 </View>
             </ScrollView>
         </SafeAreaView>

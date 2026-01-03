@@ -9,7 +9,7 @@ import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from 'expo-media-library';
 
-const PRODUCTS_STORAGE_KEY = "product_data"; // Define your storage key here
+const INVOICES_STORAGE_KEY = "invoices_data";
 
 const DealsCard = () => {
     const [products, setProducts] = useState([]);
@@ -22,13 +22,13 @@ const DealsCard = () => {
                 try {
                     setLoading(true);
                     const storedProductsJson = await SecureStore.getItemAsync(
-                        PRODUCTS_STORAGE_KEY
+                        INVOICES_STORAGE_KEY
                     );
         
                     if (storedProductsJson) {
                         const storedProducts = JSON.parse(storedProductsJson);
                         setProducts(storedProducts);
-                        console.log("Products fetched from SecureStore:", storedProducts);
+                        console.log(31, "Products fetched from SecureStore:", storedProducts);
                     } else {
                         console.log("No products found in SecureStore");
                         setProducts([]);

@@ -8,7 +8,7 @@ const InvoiceHeader = () => {
         <View style={styles.header}>
             <View style={styles.titleContainer}>
                 <Text style={styles.screenName}>মেসার্স কাসেম গার্মেন্টস</Text>
-                <Text style={styles.proprietorName}>প্রোরহিটন : মোহাম্মাদ কাসেম</Text>
+                <Text style={styles.proprietorName}>প্রোপাইটর : মোহাম্মাদ কাসেম</Text>
             </View>
 
             <View style={styles.logoContainer}>

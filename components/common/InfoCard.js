@@ -62,12 +62,13 @@ import { View, Text, StyleSheet, Image } from "react-native";
 import Icon from '@expo/vector-icons/FontAwesome';
 import { rS, vS, mS } from "@/style/responsive";
 
-const InfoCard = ({ title, description, src }) => {
+const InfoCard = ({ title, description, source, otherStyle }) => {
     return (
         <View style={styles.container}>
             <View style={styles.contentContainer}>
-                <View style={styles.imageContainer}>
-                    <Image src={src} style={styles.image} />
+                <View style={[styles.imageContainer , otherStyle]}>
+                    <Image source={source} style={styles.image} />
+                    {/* <Image source={source} style={styles.image} /> */}
                 </View>
                 <View style={styles.textContainer}>
                     <Text style={styles.title}>{title}</Text>
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: mS(8),
     },
     imageContainer: {
-        marginRight: mS(160),
+        marginRight: mS(150),
         marginBottom: mS(8),
     },
     image: {

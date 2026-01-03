@@ -1,43 +1,23 @@
-// // Import Firebase SDKs
-// import { initializeApp } from "firebase/app";
-// import { getAuth } from "firebase/auth";
-// import { getFirestore } from "firebase/firestore";
-
-// // Firebase configuration
-// const firebaseConfig = {
-//   apiKey: "AIzaSyA26SaxJxNr7F-4QHQ8kzQiPHYZcj0ajEY",
-//   authDomain: "kasem-garments-inventory.firebaseapp.com",
-//   projectId: "kasem-garments-inventory",
-//   storageBucket: "kasem-garments-inventory.appspot.com",
-//   messagingSenderId: "417274733862",
-//   appId: "1:417274733862:web:0064b687a5dbfd92dc0de7"
-// };
-
-// // Initialize Firebase
-// const app = initializeApp(firebaseConfig);
-
-// // Export Firebase instances
-// export const auth = getAuth(app);
-// export const db = getFirestore(app);
-// export default app;
-
-
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPhoneNumber } from "firebase/auth";
+import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyA26SaxJxNr7F-4QHQ8kzQiPHYZcj0ajEY",
-  authDomain: "kasem-garments-inventory.firebaseapp.com",
-  projectId: "kasem-garments-inventory",
-  storageBucket: "kasem-garments-inventory.appspot.com",
-  messagingSenderId: "417274733862",
-  appId: "1:417274733862:web:0064b687a5dbfd92dc0de7"
+  apiKey: "AIzaSyBdMEz6ZQRcbiocqwRbZ7zFgv9xjTJ3d90",
+  authDomain: "kasem-garments-inventory-8de0d.firebaseapp.com",
+  projectId: "kasem-garments-inventory-8de0d",
+  storageBucket: "kasem-garments-inventory-8de0d.firebasestorage.app",
+  messagingSenderId: "346608007928",
+  appId: "1:346608007928:web:61462f71837540980e190d",
+  measurementId: "G-5S884M966T"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
 export const db = getFirestore(app);
 export default app;
