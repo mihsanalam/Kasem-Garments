@@ -164,7 +164,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Md Mihsan Alam**
 - GitHub: [@Md-Mihsan-Alam](https://github.com/Md-Mihsan-Alam)
-- Email: [your-email@example.com]
+- Email: [mdmihsan2@gmail.com]
 
 ## 🙏 Acknowledgments
 
