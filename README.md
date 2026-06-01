@@ -55,7 +55,7 @@ The app includes multiple screens for different functionalities:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Md-Mihsan-Alam/Kasem-Garments.git
+   git clone https://github.com/mihsanalam/Kasem-Garments.git
    cd Kasem-Garments
    ```
 
@@ -163,8 +163,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👨‍💻 Author
 
 **Md Mihsan Alam**
-- GitHub: [@Md-Mihsan-Alam](https://github.com/Md-Mihsan-Alam)
-- Email: [your-email@example.com]
+- GitHub: [@mihsanalam](https://github.com/mihsanalam)
+- Email: [mdmihsan2@gmail.com]
 
 ## 🙏 Acknowledgments
 
@@ -175,7 +175,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 If you encounter any issues or have questions:
-1. Check the [Issues](https://github.com/Md-Mihsan-Alam/Kasem-Garments/issues) page
+1. Check the [Issues](https://github.com/mihsanalam/Kasem-Garments/issues) page
 2. Create a new issue if your problem isn't already reported
 3. Provide detailed information about the problem and your environment
 

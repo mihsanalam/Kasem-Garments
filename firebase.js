@@ -5,13 +5,13 @@ import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBdMEz6ZQRcbiocqwRbZ7zFgv9xjTJ3d90",
-  authDomain: "kasem-garments-inventory-8de0d.firebaseapp.com",
-  projectId: "kasem-garments-inventory-8de0d",
-  storageBucket: "kasem-garments-inventory-8de0d.firebasestorage.app",
-  messagingSenderId: "346608007928",
-  appId: "1:346608007928:web:61462f71837540980e190d",
-  measurementId: "G-5S884M966T"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
