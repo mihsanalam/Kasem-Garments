@@ -24,14 +24,15 @@ A comprehensive inventory management mobile application built with React Native 
 
 ## 📱 Screenshots
 
-The app includes multiple screens for different functionalities:
-- Authentication (Login/Signup)
-- Dashboard with analytics
-- Product management interface
-- Sales tracking and reporting
-- Invoice generation
-- Return processing
-- Admin controls
+The app includes multiple screens for managing different inventory and sales functionalities:
+
+| Dashboard | Add Product | Today's Sales |
+| :---: | :---: | :---: |
+| ![Dashboard](./screenshorts/dashboard.png) | ![Add Product](./screenshorts/add_product.png) | ![Today's Sales](./screenshorts/todays_sale.png) |
+
+| Billing / Invoice | Side Menu | Notifications |
+| :---: | :---: | :---: |
+| ![Billing / Invoice](./screenshorts/invoice_sell.png) | ![Side Menu](./screenshorts/menu.png) | ![Notifications](./screenshorts/notification.png) |
 
 ## 🛠️ Technology Stack
 
