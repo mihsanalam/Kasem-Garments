@@ -77,6 +77,7 @@ module.exports = {
     favicon: "./assets/images/app-icon.png"
   },
   plugins: [
+    "./scripts/with-google-services",
     "expo-router",
     [
       "expo-media-library",
