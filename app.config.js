@@ -7,7 +7,7 @@ module.exports = {
   icon: "./assets/images/app-icon.png",
   scheme: "myapp",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
+  newArchEnabled: false,
   splash: {
     image: "./assets/images/app-icon.png",
     resizeMode: "contain",
