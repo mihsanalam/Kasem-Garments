@@ -11,7 +11,8 @@
     "test": "jest --watchAll",
     "lint": "expo lint",
     "prebuild": "node ./scripts/generate-google-services.js && node ./scripts/generate-keystore.js",
-    "prebuild:android": "node ./scripts/generate-google-services.js && node ./scripts/generate-keystore.js"
+    "prebuild:android": "node ./scripts/generate-google-services.js && node ./scripts/generate-keystore.js",
+    "eas-build-pre-install": "node ./scripts/generate-google-services.js"
   },
   "jest": {
     "preset": "jest-expo"
